@@ -12,6 +12,7 @@ import { CommandOptions } from "../types";
 // TODO - pull this from package.json
 const requiredVersion = ">=8.9";
 
+// TODO - move into utils module
 function checkNodeVersion(wanted, id) {
     if (!semver.satisfies(process.version, wanted)) {
         console.log(
@@ -38,16 +39,20 @@ checkNodeVersion(requiredVersion, "shitvid-cli");
 // TODO - this should be pulled from package.json
 program.version("0.1.0").usage("<command> [options]");
 
+// TODO - remove run command, just invoke `shitvid`?
 program
-    .command("run")
+    .command("run <source> <limit>")
     .description("runs shitvid")
-    .action((cmd) => {
+    // .option('-p, --pizza-type <type>', 'flavour of pizza');
+    .option("-sz --size [size]", "The size video file")
+    .action((source, limit, cmd) => {
         const options = cleanArgs(cmd);
-        shitvidCommand(options);
+        // console.log(options);
+        shitvidCommand(source, limit, options);
     });
 
 // output help information on unknown commands
-program.arguments("<command>").action((cmd) => {
+program.arguments("<command>").action(cmd => {
     program.outputHelp();
     console.log(`  ` + chalk.red(`Unknown command ${chalk.yellow(cmd)}.`));
     console.log();
@@ -64,7 +69,7 @@ program.on("--help", () => {
     console.log();
 });
 
-program.commands.forEach((c) => c.on("--help", () => console.log()));
+program.commands.forEach(c => c.on("--help", () => console.log()));
 
 // Parse arguments into commander program
 program.parse(process.argv);
@@ -72,6 +77,9 @@ program.parse(process.argv);
 if (!process.argv.slice(2).length) {
     program.outputHelp();
 }
+
+// // // //
+// TODO - move into utils module
 
 /**
  * camelize
@@ -85,7 +93,10 @@ function camelize(str: string): string {
 // extract only actual options into a fresh object.
 function cleanArgs(cmd): CommandOptions {
     const args = {};
-    cmd.options.forEach((o) => {
+    const options = cmd.options || [];
+    // console.log("CMD OPTIPONS");
+    // console.log(cmd.options);
+    options.forEach(o => {
         const key: string = camelize(o.long.replace(/^--/, ""));
         // if an option is not present and Command has a method with the same name
         // it should not be copied

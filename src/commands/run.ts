@@ -26,20 +26,20 @@ export function processVideo(iteration: VideoIteration) {
             "-vf",
             `scale=${iteration.scale}`,
             iteration.outputFilename,
-            "-hide_banner",
+            "-hide_banner"
         ];
 
         const ls = spawn("ffmpeg", args);
 
-        ls.stdout.on("data", (data) => {
+        ls.stdout.on("data", data => {
             console.log(`stdout: ${data}`);
         });
 
-        ls.stderr.on("data", (data) => {
+        ls.stderr.on("data", data => {
             console.log(`stderr: ${data}`);
         });
 
-        ls.on("close", (code) => {
+        ls.on("close", code => {
             return resolve();
         });
     });
@@ -68,7 +68,7 @@ export function buildIterations(props: { limit: number }): VideoIteration[] {
             number: i,
             inputFilename,
             outputFilename,
-            scale: VideoScale.sm,
+            scale: VideoScale.sm
         };
 
         // Alternate between VideoScale.xs and VideoScale.sm
@@ -95,15 +95,21 @@ export function buildIterations(props: { limit: number }): VideoIteration[] {
 
 // // // //
 
-async function runShitvid(options: any) {
+async function runShitvid(props: {
+    source: string;
+    size: VideoScale;
+    limit: number;
+}) {
     // TODO - add cleaner output message here
     console.log("Starting UI...");
-    console.log(options);
+    console.log(props);
 
-    // TODO - pull limit here
-    // TODO - pull input filename here
+    const { limit } = props;
 
-    // TODO - get iterations using limit
+    // Get iterations using limit
+    // TODO - pass props.source to buildIterations, used to build iteration 0
+    const interations: VideoIteration[] = buildIterations({ limit });
+    console.log(interations);
 
     // TODO - use async/await for this
     // Promise.each(iterations, processVideo).then(() => {
@@ -127,8 +133,19 @@ async function runShitvid(options: any) {
     //   });
 }
 
-export const shitvidCommand = (...args) => {
-    return runShitvid({ ...args }).catch((err) => {
+// // // //
+
+export const shitvidCommand = (
+    source: string,
+    limit: number,
+    options: Record<string, string>
+) => {
+    return runShitvid({
+        source,
+        limit,
+        size: (options.size as VideoScale) || VideoScale.sm
+    }).catch(err => {
+        // TODO - implement better error handling
         // TODO - implement better error handling
         console.log("SHITVID CLI ERROR!!");
         console.log(err);
