@@ -1,4 +1,4 @@
-// import * as path from "path";
+import * as path from "path";
 import { spawn } from "child_process";
 import { VideoIteration, VideoScale } from "../types";
 
@@ -26,20 +26,20 @@ export function processVideo(iteration: VideoIteration) {
             "-vf",
             `scale=${iteration.scale}`,
             iteration.outputFilename,
-            "-hide_banner"
+            "-hide_banner",
         ];
 
         const ls = spawn("ffmpeg", args);
 
-        ls.stdout.on("data", data => {
+        ls.stdout.on("data", (data) => {
             console.log(`stdout: ${data}`);
         });
 
-        ls.stderr.on("data", data => {
+        ls.stderr.on("data", (data) => {
             console.log(`stderr: ${data}`);
         });
 
-        ls.on("close", code => {
+        ls.on("close", (code) => {
             return resolve();
         });
     });
@@ -51,7 +51,10 @@ export function processVideo(iteration: VideoIteration) {
  * buildIterations
  * @param props.limit
  */
-export function buildIterations(props: { limit: number }): VideoIteration[] {
+export function buildIterations(props: {
+    sourceFilepath: string;
+    limit: number;
+}): VideoIteration[] {
     const { limit } = props;
     let i = 0;
 
@@ -59,16 +62,21 @@ export function buildIterations(props: { limit: number }): VideoIteration[] {
     const iterations: VideoIteration[] = [];
 
     // Procudes an array of VideoIteration instances
+    // TODO - add timestamp to iteration filename, derive from sourceFilepath
     while (i < limit) {
         // TODO - use the input filename to make the new filenames here
-        let inputFilename = "iteration_" + String(i) + ".mp4";
-        let outputFilename = "iteration_" + String(i + 1) + ".mp4";
+        let inputFilename = "temp/iteration_" + String(i) + ".mp4";
+        if (i === 0) {
+            inputFilename = props.sourceFilepath;
+        }
+
+        let outputFilename = "temp/iteration_" + String(i + 1) + ".mp4";
 
         let iteration: VideoIteration = {
             number: i,
             inputFilename,
             outputFilename,
-            scale: VideoScale.sm
+            scale: VideoScale.sm,
         };
 
         // Alternate between VideoScale.xs and VideoScale.sm
@@ -101,36 +109,26 @@ async function runShitvid(props: {
     limit: number;
 }) {
     // TODO - add cleaner output message here
-    console.log("Starting UI...");
-    console.log(props);
+    const { limit, source } = props;
 
-    const { limit } = props;
+    // Defines source filepath
+    const sourceFilepath = path.resolve(process.cwd(), source);
 
     // Get iterations using limit
     // TODO - pass props.source to buildIterations, used to build iteration 0
-    const interations: VideoIteration[] = buildIterations({ limit });
-    console.log(interations);
+    const interations: VideoIteration[] = buildIterations({
+        sourceFilepath,
+        limit,
+    });
 
-    // TODO - use async/await for this
-    // Promise.each(iterations, processVideo).then(() => {
-    //     console.log("DONE");
-    // });
+    // Invoke processVideo for each iteration
+    for (const iteration of interations) {
+        // console.log(iteration);
+        await processVideo(iteration);
+    }
 
-    //   // Assembles arguments to start the UI server
-    //   let args = ["--cwd", uiPath, "run", "serve"];
-    //   const uiProc = spawn("yarn", args);
-
-    //   uiProc.stdout.on("data", (data) => {
-    //     console.log(`stdout: ${data}`);
-    //   });
-
-    //   uiProc.stderr.on("data", (data) => {
-    //     console.log(`stderr: ${data}`);
-    //   });
-
-    //   uiProc.on("close", (code) => {
-    //     return Promise.resolve();
-    //   });
+    // TODO - log finished message here
+    console.log("FINISHED");
 }
 
 // // // //
@@ -143,8 +141,8 @@ export const shitvidCommand = (
     return runShitvid({
         source,
         limit,
-        size: (options.size as VideoScale) || VideoScale.sm
-    }).catch(err => {
+        size: (options.size as VideoScale) || VideoScale.sm,
+    }).catch((err) => {
         // TODO - implement better error handling
         // TODO - implement better error handling
         console.log("SHITVID CLI ERROR!!");
