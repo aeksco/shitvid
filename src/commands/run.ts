@@ -63,33 +63,30 @@ export function buildIterations(props: {
 
     // Procudes an array of VideoIteration instances
     // TODO - add timestamp to iteration filename, derive from sourceFilepath
+    const timestamp = Number(new Date());
     while (i < limit) {
         // TODO - use the input filename to make the new filenames here
-        let inputFilename = "temp/iteration_" + String(i) + ".mp4";
+        let inputFilename =
+            "temp/iteration_" + String(i) + `_${timestamp}_` + ".mp4";
         if (i === 0) {
             inputFilename = props.sourceFilepath;
         }
 
-        let outputFilename = "temp/iteration_" + String(i + 1) + ".mp4";
+        let outputFilename =
+            "temp/iteration_" + String(i + 1) + `_${timestamp}_` + ".mp4";
 
         let iteration: VideoIteration = {
             number: i,
             inputFilename,
             outputFilename,
-            scale: VideoScale.sm,
+            scale: VideoScale.md,
         };
 
         // Alternate between VideoScale.xs and VideoScale.sm
         if (i % 2 == 0) {
-            // iteration.scale = '320:180';
-            // iteration.scale = '640:360';
-            // iteration.scale = "100:360";
-            iteration.scale = VideoScale.xs;
-        } else {
-            // iteration.scale = '2560:1440';
-            // iteration.scale = '1280:720';
-            // iteration.scale = "640:360";
             iteration.scale = VideoScale.sm;
+        } else {
+            iteration.scale = VideoScale.md;
         }
 
         // Pushes the iteration into iterations array
