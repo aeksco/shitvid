@@ -44,7 +44,7 @@ program
     .command("run <source> <limit>")
     .description("runs shitvid")
     // .option('-p, --pizza-type <type>', 'flavour of pizza');
-    .option("-sz --size [size]", "The size video file")
+    .option("-s --size [size]", "The video file size")
     .action((source, limit, cmd) => {
         const options = cleanArgs(cmd);
         // console.log(options);
@@ -52,7 +52,7 @@ program
     });
 
 // output help information on unknown commands
-program.arguments("<command>").action(cmd => {
+program.arguments("<command>").action((cmd) => {
     program.outputHelp();
     console.log(`  ` + chalk.red(`Unknown command ${chalk.yellow(cmd)}.`));
     console.log();
@@ -69,7 +69,7 @@ program.on("--help", () => {
     console.log();
 });
 
-program.commands.forEach(c => c.on("--help", () => console.log()));
+program.commands.forEach((c) => c.on("--help", () => console.log()));
 
 // Parse arguments into commander program
 program.parse(process.argv);
@@ -96,7 +96,7 @@ function cleanArgs(cmd): CommandOptions {
     const options = cmd.options || [];
     // console.log("CMD OPTIPONS");
     // console.log(cmd.options);
-    options.forEach(o => {
+    options.forEach((o) => {
         const key: string = camelize(o.long.replace(/^--/, ""));
         // if an option is not present and Command has a method with the same name
         // it should not be copied
